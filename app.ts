@@ -23,22 +23,51 @@ const text2bin = (text: string): string =>
   const binary: string[] = []
 
   for (const char of text)
-    binary.push(dec2bin(char.charCodeAt(0)))
+  {
+    const charCode = char.charCodeAt(0)
+
+    if (charCode < 127)
+    {
+      binary.push(dec2bin(charCode) + ' ')
+    }
+
+    else
+    {
+      binary.push(dec2bin(0xC0 | (charCode >> 6))) + ' '
+      binary.push(dec2bin(0x80 | (charCode & 0x3F))) + ' '
+    }
+  }
 
   return binary.join(' ')
 }
 
 const bin2text = (bin: string): string =>
 {
+  const bytes = bin.split(' ')
   const text: string[] = []
 
-  for (const code of bin.split(' '))
-    text.push(String.fromCharCode(bin2dec(code)))
+  for (let i = 0; i < bytes.length; i += 8)
+  {
+    const byte = bin2dec(bytes[i])
+
+    if ((byte & 0x80) === 0)
+    {
+      text.push(String.fromCharCode(byte))
+    }
+
+    else
+    {
+      const byte2 = bin2dec(bytes[i + 1])
+      const charCode = ((byte & 0x1F) << 6) | (byte2 & 0x3F)
+
+      text.push(String.fromCharCode(charCode))
+    }
+  }
 
   return text.join('')
 }
 
-const text = 'Goodbye World'
+const text = '¡'
 
 console.log('Binary:', text2bin(text))
 console.log('String:', bin2text(text2bin(text)))
